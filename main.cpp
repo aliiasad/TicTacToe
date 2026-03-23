@@ -1,14 +1,15 @@
 # include <SFML/Graphics.hpp>
+# include "TicTacToe.h"
 using namespace sf;
 
 const int FPS = 60;
 
 // graphics
 void loadFont(Font&);
-void handleEvents(RenderWindow&);
-void render(RenderWindow&, Font&);
+void handleEvents(RenderWindow&, TicTacToe&);
+void render(RenderWindow&, Font&, TicTacToe&);
 void drawGrid(RenderWindow&);
-void drawStatus(RenderWindow&, Font&);
+void drawStatus(RenderWindow&, Font&, TicTacToe&);
 
 int main()  {
     RenderWindow window(VideoMode({600u, 660u}), "TicTacToe");
@@ -17,9 +18,11 @@ int main()  {
     Font font;
     loadFont(font);
 
+    TicTacToe game;
+
     while (window.isOpen()) {
-        handleEvents(window);
-        render(window, font);
+        handleEvents(window, game);
+        render(window, font, game);
     }
     return 0;   
 }
@@ -33,15 +36,34 @@ void loadFont(Font& font)   {
     }
 }
 
-void handleEvents(RenderWindow& window) {
+void handleEvents(RenderWindow& window, TicTacToe& game) {
     while (const auto event = window.pollEvent())   {
         if (event->is<Event :: Closed>())     window.close();
+
+        if (const auto* key = event->getIf<Event::KeyPressed>())
+            if (key->code == Keyboard::Key::R)
+                game.reset();
+
+        if (const auto* click = event->getIf<Event::MouseButtonPressed>()) {
+            if (click->button == Mouse::Button::Left) {
+                float mx = (float)click->position.x;
+                float my = (float)click->position.y;
+
+                // only register clicks inside the board area
+                if (my > 60.f && !game.isGameOver()) {
+                    int col  = (int)(mx / 200.f);
+                    int row  = (int)((my - 60.f) / 200.f);
+                    int move = row * 3 + col + 1;
+                    game.makeMove(move);
+                }
+            }
+        }
     }
 }
 
-void render(RenderWindow& window, Font& font) {
+void render(RenderWindow& window, Font& font, TicTacToe& game) {
     window.clear(Color(30, 30, 30));
-    drawStatus(window, font);
+    drawStatus(window, font, game);
     drawGrid(window);
     window.display();
 }
@@ -68,13 +90,24 @@ void drawGrid(RenderWindow& window)    {
     return;
 }
 
-void drawStatus(RenderWindow& window, Font& font)    {
+void drawStatus(RenderWindow& window, Font& font, TicTacToe& game)    {
     RectangleShape bar(Vector2f(600.f, 60.f));
     bar.setPosition({0.f, 0.f});
     bar.setFillColor(Color(40, 40, 40));
     window.draw(bar);
 
-    Text txt(font, "X's Turn", 24); // string is currently hardcoded since no game state added
+    // real chat message
+    char msg[32];
+    if (game.isGameOver()) {
+        if (game.checkWin())
+            snprintf(msg, sizeof(msg), "%c wins!", game.getTurn());
+        else
+            snprintf(msg, sizeof(msg), "Draw!");
+    } else {
+        snprintf(msg, sizeof(msg), "%c's Turn", game.getTurn());
+    }
+
+    Text txt(font, msg, 24);
     txt.setFillColor(Color :: White);
 
     // centre text inside the allocated rectangle
