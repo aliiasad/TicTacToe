@@ -12,6 +12,7 @@ void drawGrid(RenderWindow&);
 void drawStatus(RenderWindow&, Font&, TicTacToe&);
 void drawMarks(RenderWindow&, TicTacToe&);
 void drawX(RenderWindow&, int, int);
+void drawO(RenderWindow&, int, int);
 
 int main()  {
     RenderWindow window(VideoMode({600u, 660u}), "TicTacToe");
@@ -128,6 +129,7 @@ void drawMarks(RenderWindow& window, TicTacToe& game)   {
         for (int col = 0; col < 3; col++) {
             char cell = game.getCell(row, col);
             if (cell == 'X') drawX(window, row, col);
+            else if (cell == 'O') drawO(window, row, col);
         }
     }
 }
@@ -147,6 +149,23 @@ void drawX(RenderWindow& window, int row, int col)   {
     Vertex diagonalLine2[2] = {Vertex {Vector2f(x + 160, y + 40), Color :: Green},
                                Vertex {Vector2f(x + 40, y + 160), Color :: Green}};
     window.draw(diagonalLine2, 2, PrimitiveType :: Lines);
+
+    return;
+}
+
+void drawO(RenderWindow& window, int row, int col) {
+    float radius = 60.f;
+    float x = col * 200.f;
+    float y = row * 200.f + 60.f;
+
+    float cx = x + 100.f;
+    float cy = y + 100.f; 
+    CircleShape circle(radius);
+    circle.setFillColor(Color :: Transparent);
+    circle.setOutlineColor(Color :: Red);
+    circle.setOutlineThickness(4.f);
+    circle.setPosition({cx - radius, cy - radius});
+    window.draw(circle);
 
     return;
 }
